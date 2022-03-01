@@ -1,7 +1,11 @@
-require_relative 'node.rb'
+# frozen_string_literal: true
 
-class Tree
+require_relative 'node'
+
+# Primitive tree class
+class Tree # rubocop:disable Metrics/ClassLength
   attr_accessor :root
+
   def initialize(array)
     @root = build_tree(array.sort.uniq)
   end
@@ -20,7 +24,7 @@ class Tree
   def insert(value, node = @root)
     return Node.new(value) if node.nil?
 
-    if value < node.data 
+    if value < node.data
       node.left = insert(value, node.left)
     else
       node.right = insert(value, node.right)
@@ -36,20 +40,7 @@ class Tree
     elsif value > node.data
       node.right = delete(value, node.right)
     else
-      if node.left.nil?
-        temp = node.right
-        node = nil
-        return temp
-      elsif node.right.nil?
-        temp = node.left
-        node = nil
-        return temp
-      else
-        temp = min_value_node(node.right)
-        node.data = temp.data
-        node.right = delete(temp.data, node.right)
-      end
-      node
+      delete_helper(node)
     end
   end
 
@@ -65,7 +56,7 @@ class Tree
     end
   end
 
-  def level_order(queue = [@root], &blk)
+  def level_order(queue = [@root], &blok)
     return nil if queue.empty?
 
     node = queue.shift
@@ -73,7 +64,7 @@ class Tree
     queue.push(node.left) unless node.left.nil?
     queue.push(node.right) unless node.right.nil?
 
-    level_order(queue, &blk)
+    level_order(queue, &blok)
   end
 
   def level_order2
@@ -88,48 +79,95 @@ class Tree
     end
   end
 
-  def inorder
+  def inorder(node = @root, &blok)
+    return nil if node.nil?
+
+    inorder(node.left, &blok)
+    yield node
+    inorder(node.right, &blok)
   end
 
-  def preorder
+  def preorder(node = @root, &blok)
+    return nil if node.nil?
+
+    yield node
+    preorder(node.left, &blok)
+    preorder(node.right, &blok)
   end
 
-  def postorder
+  def postorder(node = @root, &blok)
+    return nil if node.nil?
+
+    postorder(node.left, &blok)
+    postorder(node.right, &blok)
+    yield node
   end
 
-  def height
+  def height(node)
+    return -1 if node.nil?
+
+    [height(node.left), height(node.right)].max + 1
   end
 
-  def depth
+  def depth(node, parent = @root, edges = 0)
+    if node.data < parent.data
+      depth(node, parent.left, edges + 1)
+    elsif node.data > parent.data
+      depth(node, parent.right, edges + 1)
+    else
+      edges
+    end
   end
 
-  def balanced?
+  def balanced?(node = @root)
+    return true if node.nil?
+
+    left = height(node.left)
+    right = height(node.right)
+    diff = (left - right).abs
+    return false if diff > 1
+
+    balanced?(node.left) && balanced?(node.right)
   end
 
   def rebalance
+    arr = []
+    inorder { |node| arr.push(node.data) }
+    @root = build_tree(arr)
   end
 
-  def pretty_print(node = @root, prefix = '', is_left = true)
+  def pretty_print(node = @root, prefix = '', is_left = true) # rubocop:disable Style/OptionalBooleanParameter
     pretty_print(node.right, "#{prefix}#{is_left ? '│   ' : '    '}", false) if node.right
     puts "#{prefix}#{is_left ? '└── ' : '┌── '}#{node.data}"
     pretty_print(node.left, "#{prefix}#{is_left ? '    ' : '│   '}", true) if node.left
   end
 
   private
+
   def min_value_node(node)
-    current = node
+    node = node.left until node.left.nil?
+    node
+  end
 
-    current = current.left until current.left.nil?
-
-    current
+  def delete_helper(node) # rubocop:disable Metrics/MethodLength
+    if node.left.nil?
+      temp = node.right
+      node = nil
+      return temp
+    elsif node.right.nil?
+      temp = node.left
+      node = nil
+      return temp
+    else
+      temp = min_value_node(node.right)
+      node.data = temp.data
+      node.right = delete(temp.data, node.right)
+    end
+    node
   end
 end
 
 tree = Tree.new([1, 2, 3, 4, 6, 7, 8, 9, 10])
 tree.pretty_print
-#tree.insert(5)
-#tree.pretty_print
 tree.delete(2)
-puts tree.find(2)
 tree.pretty_print
-tree.level_order { |node| puts node.data }

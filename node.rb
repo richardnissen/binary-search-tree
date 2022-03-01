@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# Primitive Node class
 class Node
   attr_accessor :data, :left, :right
 
