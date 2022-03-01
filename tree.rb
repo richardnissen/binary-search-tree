@@ -166,8 +166,3 @@ class Tree # rubocop:disable Metrics/ClassLength
     node
   end
 end
-
-tree = Tree.new([1, 2, 3, 4, 6, 7, 8, 9, 10])
-tree.pretty_print
-tree.delete(2)
-tree.pretty_print
