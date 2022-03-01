@@ -65,7 +65,27 @@ class Tree
     end
   end
 
-  def level_order
+  def level_order(queue = [@root], &blk)
+    return nil if queue.empty?
+
+    node = queue.shift
+    yield node
+    queue.push(node.left) unless node.left.nil?
+    queue.push(node.right) unless node.right.nil?
+
+    level_order(queue, &blk)
+  end
+
+  def level_order2
+    return nil if @root.nil?
+
+    queue = [@root]
+    until queue.empty?
+      node = queue.shift
+      yield node
+      queue.push(node.left) unless node.left.nil?
+      queue.push(node.right) unless node.right.nil?
+    end
   end
 
   def inorder
@@ -112,3 +132,4 @@ tree.pretty_print
 tree.delete(2)
 puts tree.find(2)
 tree.pretty_print
+tree.level_order { |node| puts node.data }
